@@ -1,24 +1,33 @@
 import React, { useState } from 'react';
+import { ActiveModule } from './Sidebar';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
   Download,
   ShieldCheck,
   Database,
   Trash2,
+  LayoutDashboard,
+  PlusCircle,
+  FileSpreadsheet,
+  Clock,
 } from 'lucide-react';
 
 interface HeaderProps {
+  activeModule: ActiveModule;
+  onSelectModule: (module: ActiveModule) => void;
   onOpenSettings: () => void;
   onOpenSampleDataModal: () => void;
   hasSampleData: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  activeModule,
+  onSelectModule,
   onOpenSettings,
   onOpenSampleDataModal,
   hasSampleData,
 }) => {
-  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const { isInstallable, isInstalled, install } = usePWAInstall();
   const [showIOSModal, setShowIOSModal] = useState(false);
 
   const handleInstallClick = () => {
@@ -29,16 +38,27 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const navLinks = [
+    { id: 'dashboard' as ActiveModule, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'nueva_hoja_servicio' as ActiveModule, label: 'Nueva hoja de servicio', icon: PlusCircle },
+    { id: 'registros' as ActiveModule, label: 'Registros', icon: FileSpreadsheet },
+    { id: 'historial' as ActiveModule, label: 'Historial', icon: Clock },
+  ];
+
   return (
     <>
       <header className="sticky top-0 z-30 bg-[#0B192C] text-white shadow-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
-          {/* Left: Brand Identity (NO hamburger icon on mobile, tablet, or iOS as requested) */}
-          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          {/* Left: Brand Identity (Clicking logo goes directly to Dashboard) */}
+          <div
+            onClick={() => onSelectModule('dashboard')}
+            className="flex items-center gap-2 sm:gap-2.5 min-w-0 cursor-pointer select-none group"
+            title="Ir al Dashboard Principal"
+          >
             <img
               src="/icon.svg"
               alt="ELZE"
-              className="w-8 h-8 sm:w-9 sm:h-9 object-contain shrink-0"
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain shrink-0 group-hover:scale-105 transition-transform"
             />
             <div className="leading-tight min-w-0">
               <div className="flex items-center gap-1.5">
@@ -55,9 +75,33 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Right: Rol Admin + Install + Settings (Clean responsive spacing, no overlapping) */}
+          {/* Center: Quick Navigation for Tablet & Desktop */}
+          <div className="hidden lg:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = activeModule === link.id;
+
+              return (
+                <button
+                  key={link.id}
+                  type="button"
+                  onClick={() => onSelectModule(link.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-sky-600 text-white shadow-xs'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{link.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right: Rol Admin + Install + Settings */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Rol Admin Badge (Exclusive role: Admin) */}
+            {/* Rol Admin Badge */}
             <div className="flex items-center gap-1 bg-slate-800/90 border border-slate-700 px-2 sm:px-2.5 py-1 rounded-lg text-sky-300 text-xs font-bold">
               <ShieldCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
               <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">
@@ -70,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenSampleDataModal}
-                className="hidden lg:flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition"
+                className="hidden xl:flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition"
                 title="Borrar datos de muestra del navegador"
               >
                 <Trash2 className="w-3.5 h-3.5" />

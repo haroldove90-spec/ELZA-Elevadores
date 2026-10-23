@@ -14,7 +14,7 @@ import { ServiceSheetPreview } from './components/ServiceSheetPreview';
 import { CheckCircle2, AlertCircle, X, FileDown, Printer } from 'lucide-react';
 
 export default function App() {
-  // Active Module State: Default to 'dashboard'
+  // Active Module State: Default to 'dashboard' (El panel de control principal)
   const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
 
   // Sidebar collapse on desktop
@@ -49,6 +49,17 @@ export default function App() {
   }, []);
 
   const hasSampleData = sheets.some((s) => s.esMuestra);
+
+  const handleNavigate = (mod: ActiveModule) => {
+    if (mod === 'ajustes') {
+      setIsSettingsOpen(true);
+    } else {
+      if (mod === 'nueva_hoja_servicio' && activeModule !== 'nueva_hoja_servicio') {
+        setEditingSheet(null);
+      }
+      setActiveModule(mod);
+    }
+  };
 
   // Save sheet handler
   const handleSaveSheet = async (sheet: ServiceSheet, andExportPdf: boolean = false) => {
@@ -111,8 +122,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased overflow-x-hidden">
-      {/* 1. Cabecera Institucional Unificada (Sin hamburguesa en tablet e iOS/móvil) */}
+      {/* 1. Cabecera Institucional Unificada con enlaces directos al Dashboard y módulos */}
       <Header
+        activeModule={activeModule}
+        onSelectModule={handleNavigate}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenSampleDataModal={handleClearSampleData}
         hasSampleData={hasSampleData}
@@ -123,16 +136,7 @@ export default function App() {
         {/* 2. Menú Lateral en Escritorio */}
         <Sidebar
           activeModule={activeModule}
-          onSelectModule={(mod) => {
-            if (mod === 'ajustes') {
-              setIsSettingsOpen(true);
-            } else {
-              if (mod === 'nueva_hoja_servicio' && activeModule !== 'nueva_hoja_servicio') {
-                setEditingSheet(null);
-              }
-              setActiveModule(mod);
-            }
-          }}
+          onSelectModule={handleNavigate}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           hasSampleData={hasSampleData}
@@ -141,7 +145,7 @@ export default function App() {
 
         {/* 3. Área de Trabajo Limpia */}
         <main className="flex-1 p-3 sm:p-5 lg:p-6 min-w-0">
-          {/* Módulo: Dashboard */}
+          {/* Módulo: Dashboard (Panel Principal) */}
           {activeModule === 'dashboard' && (
             <MainDashboard
               sheets={sheets}
@@ -194,16 +198,7 @@ export default function App() {
       {/* 4. Barra de Navegación Móvil y Tablet (Color de fondo oscuro e íconos en blanco) */}
       <BottomNav
         activeModule={activeModule}
-        onSelectModule={(mod) => {
-          if (mod === 'ajustes') {
-            setIsSettingsOpen(true);
-          } else {
-            if (mod === 'nueva_hoja_servicio' && activeModule !== 'nueva_hoja_servicio') {
-              setEditingSheet(null);
-            }
-            setActiveModule(mod);
-          }
-        }}
+        onSelectModule={handleNavigate}
       />
 
       {/* 5. Modal de Ajustes, Borrado de Muestra & Supabase */}
