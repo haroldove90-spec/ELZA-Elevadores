@@ -1,0 +1,8 @@
+{
+  "name": "Invernadero ELZE",
+  "description": "Dashboard institucional y sistema de gestión de hojas de servicio técnico para transporte vertical y elevadores ELZE.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

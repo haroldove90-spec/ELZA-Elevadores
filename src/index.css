@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+  }
+}
+
+@media print {
+  /* Hide all UI elements when printing */
+  header,
+  aside,
+  nav,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #service-sheet-document,
+  #modal-sheet-preview {
+    box-shadow: none !important;
+    border: 1px solid #94a3b8 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 8px !important;
+    page-break-inside: avoid !important;
+  }
+
+  @page {
+    size: letter portrait;
+    margin: 8mm;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
