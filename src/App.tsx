@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserRole, ServiceSheet } from './types/serviceSheet';
+import { ServiceSheet } from './types/serviceSheet';
 import { storageService } from './services/storageService';
 import { pdfExportService } from './services/pdfExportService';
-import { RoleSelector } from './components/RoleSelector';
 import { Header } from './components/Header';
 import { Sidebar, ActiveModule } from './components/Sidebar';
 import { BottomNav } from './components/BottomNav';
@@ -15,24 +14,11 @@ import { ServiceSheetPreview } from './components/ServiceSheetPreview';
 import { CheckCircle2, AlertCircle, X, FileDown, Printer } from 'lucide-react';
 
 export default function App() {
-  // Role State: Default to 'admin' so the user immediately sees the full dashboard
-  const [activeRole, setActiveRole] = useState<UserRole>(() => {
-    const saved = storageService.getActiveRole();
-    if (saved === 'admin' || saved === 'tecnico' || saved === 'supervisor' || saved === 'cliente') {
-      return saved;
-    }
-    return 'admin';
-  });
-
-  // State to track if user explicitly logged out to see the Role Selector grid
-  const [showRoleSelector, setShowRoleSelector] = useState<boolean>(false);
-
   // Active Module State: Default to 'dashboard'
   const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
 
-  // Sidebar collapse & mobile drawer
+  // Sidebar collapse on desktop
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Sheets data
   const [sheets, setSheets] = useState<ServiceSheet[]>([]);
@@ -63,21 +49,6 @@ export default function App() {
   }, []);
 
   const hasSampleData = sheets.some((s) => s.esMuestra);
-
-  // Role selection
-  const handleSelectRole = (role: UserRole) => {
-    setActiveRole(role);
-    storageService.setActiveRole(role);
-    setShowRoleSelector(false);
-    setActiveModule('dashboard');
-    showToast(`Invernadero ELZE activo en modo ${role.toUpperCase()}`, 'info');
-  };
-
-  // Logout / Switch role
-  const handleLogout = () => {
-    setShowRoleSelector(true);
-    setEditingSheet(null);
-  };
 
   // Save sheet handler
   const handleSaveSheet = async (sheet: ServiceSheet, andExportPdf: boolean = false) => {
@@ -138,26 +109,18 @@ export default function App() {
     showToast(`Se eliminaron ${countCleared} registros de muestra. El navegador no los mostrará más.`, 'info');
   };
 
-  // If user explicitly clicked Logout, show clean 2-col/4-col selector without header
-  if (showRoleSelector) {
-    return <RoleSelector onSelectRole={handleSelectRole} />;
-  }
-
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased">
-      {/* 1. Cabecera Institucional Unificada */}
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased overflow-x-hidden">
+      {/* 1. Cabecera Institucional Unificada (Sin hamburguesa en tablet e iOS/móvil) */}
       <Header
-        activeRole={activeRole}
-        onLogout={handleLogout}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenSampleDataModal={handleClearSampleData}
-        onToggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         hasSampleData={hasSampleData}
       />
 
       {/* Main Layout with Desktop Sidebar and Content */}
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
-        {/* 2. Menú Lateral Desplegable en Escritorio */}
+        {/* 2. Menú Lateral en Escritorio */}
         <Sidebar
           activeModule={activeModule}
           onSelectModule={(mod) => {
@@ -170,23 +133,18 @@ export default function App() {
               setActiveModule(mod);
             }
           }}
-          activeRole={activeRole}
-          onLogout={handleLogout}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           hasSampleData={hasSampleData}
           onClearSampleData={handleClearSampleData}
-          isOpenMobile={isMobileSidebarOpen}
-          onCloseMobile={() => setIsMobileSidebarOpen(false)}
         />
 
-        {/* 3. Área de Trabajo Limpia (Sin Pestañas Repetitivas) */}
-        <main className="flex-1 p-3 sm:p-6 min-w-0">
-          {/* Módulo: Dashboard Principal */}
+        {/* 3. Área de Trabajo Limpia */}
+        <main className="flex-1 p-3 sm:p-5 lg:p-6 min-w-0">
+          {/* Módulo: Dashboard */}
           {activeModule === 'dashboard' && (
             <MainDashboard
               sheets={sheets}
-              activeRole={activeRole}
               onNavigate={(mod) => {
                 if (mod === 'nueva_hoja_servicio') setEditingSheet(null);
                 setActiveModule(mod);
@@ -233,7 +191,7 @@ export default function App() {
         </main>
       </div>
 
-      {/* 4. Navegación Móvil y Tablet (Bottom Bar) */}
+      {/* 4. Barra de Navegación Móvil y Tablet (Color de fondo oscuro e íconos en blanco) */}
       <BottomNav
         activeModule={activeModule}
         onSelectModule={(mod) => {
@@ -256,7 +214,7 @@ export default function App() {
         hasSampleData={hasSampleData}
       />
 
-      {/* 6. Modal Rápido de Previsualización Oficial */}
+      {/* 6. Modal de Previsualización Oficial */}
       {previewingSheet && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden my-auto border border-slate-300">
@@ -306,7 +264,7 @@ export default function App() {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-16 md:bottom-6 right-4 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 text-xs font-semibold animate-slide-up">
+        <div className="fixed bottom-20 md:bottom-6 right-4 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 text-xs font-semibold animate-slide-up">
           {toast.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           ) : (

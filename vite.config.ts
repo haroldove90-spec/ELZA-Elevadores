@@ -11,41 +11,10 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
-        manifest: {
-          id: '/',
-          name: 'Invernadero ELZE',
-          short_name: 'ELZE',
-          description: 'Sistema institucional de hojas de servicio técnico y control de transporte vertical ELZE Elevadores.',
-          theme_color: '#0B192C',
-          background_color: '#F8FAFC',
-          display: 'standalone',
-          start_url: '/',
-          scope: '/',
-          icons: [
-            {
-              src: '/pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any',
-            },
-            {
-              src: '/pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any',
-            },
-            {
-              src: '/pwa-maskable-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable',
-            },
-          ],
-        },
+        includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'manifest.webmanifest'],
+        manifest: false, // Using /public/manifest.webmanifest for reliable static delivery
         devOptions: {
-          enabled: true,
-          type: 'module',
+          enabled: false, // Disabled in dev server to prevent websocket send errors when HMR is disabled
         },
       }),
     ],

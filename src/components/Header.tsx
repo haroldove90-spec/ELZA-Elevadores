@@ -1,56 +1,30 @@
 import React, { useState } from 'react';
-import { UserRole } from '../types/serviceSheet';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
   Download,
-  LogOut,
-  Shield,
-  Wrench,
-  Eye,
-  Building,
-  Menu,
+  ShieldCheck,
   Database,
   Trash2,
-  Sparkles,
 } from 'lucide-react';
 
 interface HeaderProps {
-  activeRole: UserRole;
-  onLogout: () => void;
   onOpenSettings: () => void;
   onOpenSampleDataModal: () => void;
-  onToggleSidebar?: () => void;
   hasSampleData: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  activeRole,
-  onLogout,
   onOpenSettings,
   onOpenSampleDataModal,
-  onToggleSidebar,
   hasSampleData,
 }) => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [showIOSModal, setShowIOSModal] = useState(false);
 
-  const roleLabels: Record<UserRole, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
-    admin: { label: 'Admin', icon: Shield },
-    tecnico: { label: 'Técnico', icon: Wrench },
-    supervisor: { label: 'Supervisor', icon: Eye },
-    cliente: { label: 'Cliente', icon: Building },
-  };
-
-  const currentRoleInfo = roleLabels[activeRole] || roleLabels.admin;
-  const RoleIcon = currentRoleInfo.icon;
-
   const handleInstallClick = () => {
     if (isInstallable) {
       install();
-    } else if (isIOS) {
-      setShowIOSModal(true);
     } else {
-      // In case neither fired yet or already in browser
       setShowIOSModal(true);
     }
   };
@@ -58,49 +32,36 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header className="sticky top-0 z-30 bg-[#0B192C] text-white shadow-md border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
-          {/* Left: Mobile Menu Trigger + ELZE Logo */}
-          <div className="flex items-center gap-3">
-            {onToggleSidebar && (
-              <button
-                type="button"
-                onClick={onToggleSidebar}
-                className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 md:hidden transition"
-                aria-label="Abrir menú"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            )}
-
-            <div className="flex items-center gap-2.5 select-none">
-              <img
-                src="/icon.svg"
-                alt="ELZE"
-                className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
-              />
-              <div className="leading-tight">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-black text-base sm:text-lg tracking-wider text-white">
-                    ELZE
-                  </span>
-                  <span className="text-[10px] bg-sky-600 text-white font-bold px-1.5 py-0.2 rounded uppercase">
-                    Elevadores
-                  </span>
-                </div>
-                <div className="text-[9px] text-slate-400 font-medium hidden sm:block">
-                  Invernadero ELZE • Transporte Vertical
-                </div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
+          {/* Left: Brand Identity (NO hamburger icon on mobile, tablet, or iOS as requested) */}
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <img
+              src="/icon.svg"
+              alt="ELZE"
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain shrink-0"
+            />
+            <div className="leading-tight min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-base sm:text-lg tracking-wider text-white">
+                  ELZE
+                </span>
+                <span className="text-[9px] sm:text-[10px] bg-sky-600 text-white font-bold px-1.5 py-0.2 rounded uppercase shrink-0">
+                  Elevadores
+                </span>
+              </div>
+              <div className="text-[9px] text-slate-400 font-medium hidden sm:block truncate">
+                Invernadero ELZE • Transporte Vertical
               </div>
             </div>
           </div>
 
-          {/* Right: Rol Activo + Instalar + Configuración + Salir */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Indicador de Rol Activo */}
-            <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 px-2.5 py-1 rounded-lg text-xs font-bold text-sky-300">
-              <RoleIcon className="w-3.5 h-3.5 text-sky-400" />
-              <span className="text-[11px] uppercase tracking-wide">
-                Rol: {currentRoleInfo.label}
+          {/* Right: Rol Admin + Install + Settings (Clean responsive spacing, no overlapping) */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Rol Admin Badge (Exclusive role: Admin) */}
+            <div className="flex items-center gap-1 bg-slate-800/90 border border-slate-700 px-2 sm:px-2.5 py-1 rounded-lg text-sky-300 text-xs font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">
+                Admin
               </span>
             </div>
 
@@ -117,39 +78,28 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Botón de Instalación Rápida PWA */}
+            {/* Quick PWA Install button */}
             {!isInstalled && (
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition duration-150 animate-pulse-once"
+                className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs transition"
                 title="Instalar Invernadero ELZE en este dispositivo"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Instalar</span>
+                <Download className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Instalar</span>
               </button>
             )}
 
-            {/* Configuración / Supabase */}
+            {/* Settings & Supabase */}
             <button
               type="button"
               onClick={onOpenSettings}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 text-xs font-semibold flex items-center gap-1 transition"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-750 text-xs font-semibold flex items-center gap-1 transition"
               title="Ajustes de sistema y Supabase"
             >
-              <Database className="w-4 h-4 text-sky-400" />
+              <Database className="w-4 h-4 text-sky-400 shrink-0" />
               <span className="hidden sm:inline">Ajustes</span>
-            </button>
-
-            {/* Botón de Cierre de Sesión */}
-            <button
-              type="button"
-              onClick={onLogout}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-bold transition shadow-xs"
-              title="Cambiar de rol o cerrar sesión"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Salir</span>
             </button>
           </div>
         </div>
