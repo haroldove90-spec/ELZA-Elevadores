@@ -6,24 +6,29 @@ import { RoleSelector } from './components/RoleSelector';
 import { Header } from './components/Header';
 import { Sidebar, ActiveModule } from './components/Sidebar';
 import { BottomNav } from './components/BottomNav';
+import { MainDashboard } from './components/MainDashboard';
 import { ServiceForm } from './components/ServiceForm';
-import { ServiceHistory } from './components/ServiceHistory';
-import { MetricsDashboard } from './components/MetricsDashboard';
+import { RecordsModule } from './components/RecordsModule';
+import { HistoryModule } from './components/HistoryModule';
 import { SystemSettingsModal } from './components/SystemSettingsModal';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { ServiceSheetPreview } from './components/ServiceSheetPreview';
+import { CheckCircle2, AlertCircle, X, FileDown, Printer } from 'lucide-react';
 
 export default function App() {
-  // Role State (if null, displays the initial role selector)
-  const [activeRole, setActiveRole] = useState<UserRole | null>(() => {
+  // Role State: Default to 'admin' so the user immediately sees the full dashboard
+  const [activeRole, setActiveRole] = useState<UserRole>(() => {
     const saved = storageService.getActiveRole();
     if (saved === 'admin' || saved === 'tecnico' || saved === 'supervisor' || saved === 'cliente') {
       return saved;
     }
-    return null;
+    return 'admin';
   });
 
-  // Active Module State
-  const [activeModule, setActiveModule] = useState<ActiveModule>('nueva_hoja');
+  // State to track if user explicitly logged out to see the Role Selector grid
+  const [showRoleSelector, setShowRoleSelector] = useState<boolean>(false);
+
+  // Active Module State: Default to 'dashboard'
+  const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
 
   // Sidebar collapse & mobile drawer
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -32,6 +37,9 @@ export default function App() {
   // Sheets data
   const [sheets, setSheets] = useState<ServiceSheet[]>([]);
   const [editingSheet, setEditingSheet] = useState<ServiceSheet | null>(null);
+
+  // Quick sheet inspection modal
+  const [previewingSheet, setPreviewingSheet] = useState<ServiceSheet | null>(null);
 
   // Settings modal
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -60,20 +68,14 @@ export default function App() {
   const handleSelectRole = (role: UserRole) => {
     setActiveRole(role);
     storageService.setActiveRole(role);
-
-    // Default module per role
-    if (role === 'admin' || role === 'tecnico') {
-      setActiveModule('nueva_hoja');
-    } else {
-      setActiveModule('historial');
-    }
-    showToast(`Bienvenido a Invernadero ELZE • Modo ${role.toUpperCase()}`, 'info');
+    setShowRoleSelector(false);
+    setActiveModule('dashboard');
+    showToast(`Invernadero ELZE activo en modo ${role.toUpperCase()}`, 'info');
   };
 
   // Logout / Switch role
   const handleLogout = () => {
-    setActiveRole(null);
-    storageService.setActiveRole(null);
+    setShowRoleSelector(true);
     setEditingSheet(null);
   };
 
@@ -85,15 +87,14 @@ export default function App() {
     showToast(`Hoja de Servicio ${sheet.ordenServicio} guardada exitosamente.`);
 
     if (andExportPdf) {
-      // Trigger PDF export
       const filename = `ELZE_Hoja_${sheet.ordenServicio.replace(/\s+/g, '_')}_${sheet.nombreCliente.replace(/\s+/g, '_')}.pdf`;
-      setActiveModule('historial');
+      setActiveModule('registros');
       setTimeout(async () => {
         await pdfExportService.exportElementToPdf('service-sheet-document', filename);
         showToast('PDF generado y descargado correctamente.');
-      }, 400);
+      }, 350);
     } else {
-      setActiveModule('historial');
+      setActiveModule('registros');
     }
   };
 
@@ -114,20 +115,20 @@ export default function App() {
       esMuestra: false,
     };
     setEditingSheet(duplicated);
-    setActiveModule('nueva_hoja');
-    showToast('Copia de hoja creada en el formulario para edición.');
+    setActiveModule('nueva_hoja_servicio');
+    showToast('Copia lista para edición en Nueva Hoja de Servicio.');
   };
 
   // Edit sheet handler
   const handleEditSheet = (sheet: ServiceSheet) => {
     setEditingSheet(sheet);
-    setActiveModule('nueva_hoja');
+    setActiveModule('nueva_hoja_servicio');
   };
 
   // Create new sheet
   const handleCreateNew = () => {
     setEditingSheet(null);
-    setActiveModule('nueva_hoja');
+    setActiveModule('nueva_hoja_servicio');
   };
 
   // Clear sample data handler
@@ -137,8 +138,8 @@ export default function App() {
     showToast(`Se eliminaron ${countCleared} registros de muestra. El navegador no los mostrará más.`, 'info');
   };
 
-  // If no role is selected, show initial clean 2-col/4-col selector without header
-  if (!activeRole) {
+  // If user explicitly clicked Logout, show clean 2-col/4-col selector without header
+  if (showRoleSelector) {
     return <RoleSelector onSelectRole={handleSelectRole} />;
   }
 
@@ -154,7 +155,7 @@ export default function App() {
         hasSampleData={hasSampleData}
       />
 
-      {/* Main Container with Desktop Sidebar and Content */}
+      {/* Main Layout with Desktop Sidebar and Content */}
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
         {/* 2. Menú Lateral Desplegable en Escritorio */}
         <Sidebar
@@ -163,7 +164,7 @@ export default function App() {
             if (mod === 'ajustes') {
               setIsSettingsOpen(true);
             } else {
-              if (mod === 'nueva_hoja' && activeModule !== 'nueva_hoja') {
+              if (mod === 'nueva_hoja_servicio' && activeModule !== 'nueva_hoja_servicio') {
                 setEditingSheet(null);
               }
               setActiveModule(mod);
@@ -181,19 +182,36 @@ export default function App() {
 
         {/* 3. Área de Trabajo Limpia (Sin Pestañas Repetitivas) */}
         <main className="flex-1 p-3 sm:p-6 min-w-0">
-          {activeModule === 'nueva_hoja' && (
+          {/* Módulo: Dashboard Principal */}
+          {activeModule === 'dashboard' && (
+            <MainDashboard
+              sheets={sheets}
+              activeRole={activeRole}
+              onNavigate={(mod) => {
+                if (mod === 'nueva_hoja_servicio') setEditingSheet(null);
+                setActiveModule(mod);
+              }}
+              onViewSheet={(sheet) => setPreviewingSheet(sheet)}
+              onClearSampleData={handleClearSampleData}
+              hasSampleData={hasSampleData}
+            />
+          )}
+
+          {/* Módulo: Nueva Hoja de Servicio */}
+          {activeModule === 'nueva_hoja_servicio' && (
             <ServiceForm
               initialData={editingSheet}
               onSave={handleSaveSheet}
               onCancel={() => {
                 setEditingSheet(null);
-                setActiveModule('historial');
+                setActiveModule('registros');
               }}
             />
           )}
 
-          {activeModule === 'historial' && (
-            <ServiceHistory
+          {/* Módulo: Registros (Separado) */}
+          {activeModule === 'registros' && (
+            <RecordsModule
               sheets={sheets}
               onEdit={handleEditSheet}
               onDelete={handleDeleteSheet}
@@ -204,13 +222,11 @@ export default function App() {
             />
           )}
 
-          {activeModule === 'metricas' && (
-            <MetricsDashboard
+          {/* Módulo: Historial (Separado) */}
+          {activeModule === 'historial' && (
+            <HistoryModule
               sheets={sheets}
-              onViewSheet={(sheet) => {
-                setEditingSheet(sheet);
-                setActiveModule('historial');
-              }}
+              onViewSheet={(sheet) => setPreviewingSheet(sheet)}
               onCreateNew={handleCreateNew}
             />
           )}
@@ -224,7 +240,7 @@ export default function App() {
           if (mod === 'ajustes') {
             setIsSettingsOpen(true);
           } else {
-            if (mod === 'nueva_hoja' && activeModule !== 'nueva_hoja') {
+            if (mod === 'nueva_hoja_servicio' && activeModule !== 'nueva_hoja_servicio') {
               setEditingSheet(null);
             }
             setActiveModule(mod);
@@ -239,6 +255,54 @@ export default function App() {
         onDataChanged={loadSheets}
         hasSampleData={hasSampleData}
       />
+
+      {/* 6. Modal Rápido de Previsualización Oficial */}
+      {previewingSheet && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden my-auto border border-slate-300">
+            <div className="p-3 sm:p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="font-black text-slate-900 text-sm">
+                  O.S. {previewingSheet.ordenServicio} - {previewingSheet.nombreCliente}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const filename = `ELZE_Hoja_${previewingSheet.ordenServicio.replace(/\s+/g, '_')}.pdf`;
+                    pdfExportService.exportElementToPdf('global-sheet-preview-modal', filename);
+                  }}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-xs"
+                >
+                  <FileDown className="w-3.5 h-3.5" />
+                  Descargar PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => pdfExportService.printElement()}
+                  className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition flex items-center gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Imprimir
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewingSheet(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 sm:p-6 overflow-y-auto bg-slate-100 flex-1">
+              <ServiceSheetPreview sheet={previewingSheet} id="global-sheet-preview-modal" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast && (

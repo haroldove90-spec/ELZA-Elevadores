@@ -1,21 +1,18 @@
 import React from 'react';
 import { UserRole } from '../types/serviceSheet';
 import {
-  FileText,
-  Clock,
-  BarChart3,
-  Settings,
+  LayoutDashboard,
   PlusCircle,
+  FileSpreadsheet,
+  Clock,
+  Settings,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Shield,
-  Layers,
-  Sparkles,
   Trash2,
 } from 'lucide-react';
 
-export type ActiveModule = 'nueva_hoja' | 'historial' | 'metricas' | 'ajustes';
+export type ActiveModule = 'dashboard' | 'nueva_hoja_servicio' | 'registros' | 'historial' | 'ajustes';
 
 interface SidebarProps {
   activeModule: ActiveModule;
@@ -44,22 +41,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const menuItems = [
     {
-      id: 'nueva_hoja' as ActiveModule,
-      label: 'Nueva Hoja',
-      badge: 'Formulario',
+      id: 'dashboard' as ActiveModule,
+      label: 'Dashboard',
+      badge: 'Principal',
+      icon: LayoutDashboard,
+    },
+    {
+      id: 'nueva_hoja_servicio' as ActiveModule,
+      label: 'Nueva hoja de servicio',
+      badge: 'Oficial',
       icon: PlusCircle,
+    },
+    {
+      id: 'registros' as ActiveModule,
+      label: 'Registros',
+      badge: 'Hojas',
+      icon: FileSpreadsheet,
     },
     {
       id: 'historial' as ActiveModule,
       label: 'Historial',
-      badge: 'PDF',
+      badge: 'Auditoría',
       icon: Clock,
-    },
-    {
-      id: 'metricas' as ActiveModule,
-      label: 'Métricas',
-      badge: 'Reportes',
-      icon: BarChart3,
     },
     {
       id: 'ajustes' as ActiveModule,
@@ -86,7 +89,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* Top: Menu Items */}
         <div className="p-3 space-y-2 overflow-y-auto">
-          {/* Section title (only when not collapsed) */}
           {!isCollapsed && (
             <div className="px-3 pt-2 pb-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
               Módulos del Sistema
@@ -116,9 +118,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-sky-600' : 'text-slate-400'}`} />
                   {!isCollapsed && (
                     <div className="flex-1 flex items-center justify-between text-left">
-                      <span>{item.label}</span>
+                      <span className="truncate">{item.label}</span>
                       {item.badge && (
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${isActive ? 'bg-sky-200/60 text-sky-800' : 'bg-slate-100 text-slate-500'}`}>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold shrink-0 ${isActive ? 'bg-sky-200/60 text-sky-800' : 'bg-slate-100 text-slate-500'}`}>
                           {item.badge}
                         </span>
                       )}
@@ -152,10 +154,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Bottom: Collapse toggle & Session info */}
         <div className="p-3 border-t border-slate-200 space-y-2 bg-slate-50/50">
-          {/* Active role badge in sidebar */}
           <div className={`flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-200 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-xs shrink-0">
-              {activeRole.slice(0, 2).toUpperCase()}
+            <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-xs shrink-0 uppercase">
+              {activeRole.slice(0, 2)}
             </div>
             {!isCollapsed && (
               <div className="min-w-0 flex-1">
@@ -170,7 +171,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Logout button */}
           <button
             type="button"
             onClick={onLogout}
@@ -183,12 +183,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed && <span>Cerrar Sesión</span>}
           </button>
 
-          {/* Collapse/Expand Toggle (Desktop only) */}
           <button
             type="button"
             onClick={onToggleCollapse}
             className="hidden md:flex w-full items-center justify-center py-1.5 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
-            title={isCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
+            title={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>

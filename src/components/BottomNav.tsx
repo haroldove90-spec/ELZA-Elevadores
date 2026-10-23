@@ -1,9 +1,10 @@
 import React from 'react';
 import { ActiveModule } from './Sidebar';
 import {
+  LayoutDashboard,
   PlusCircle,
+  FileSpreadsheet,
   Clock,
-  BarChart3,
   Settings,
 } from 'lucide-react';
 
@@ -18,19 +19,24 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 }) => {
   const items = [
     {
-      id: 'nueva_hoja' as ActiveModule,
+      id: 'dashboard' as ActiveModule,
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+    },
+    {
+      id: 'nueva_hoja_servicio' as ActiveModule,
       label: 'Nueva Hoja',
       icon: PlusCircle,
+    },
+    {
+      id: 'registros' as ActiveModule,
+      label: 'Registros',
+      icon: FileSpreadsheet,
     },
     {
       id: 'historial' as ActiveModule,
       label: 'Historial',
       icon: Clock,
-    },
-    {
-      id: 'metricas' as ActiveModule,
-      label: 'Métricas',
-      icon: BarChart3,
     },
     {
       id: 'ajustes' as ActiveModule,
@@ -41,7 +47,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 md:hidden pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-      <div className="grid grid-cols-4 h-14">
+      <div className="grid grid-cols-5 h-14">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeModule === item.id;
@@ -61,7 +67,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-sky-600"></span>
                 )}
               </div>
-              <span className="text-[10px] mt-0.5 tracking-tight truncate max-w-[70px]">
+              <span className="text-[9px] mt-0.5 tracking-tight truncate max-w-[62px]">
                 {item.label}
               </span>
             </button>
